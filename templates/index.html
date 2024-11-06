@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css">
+
+    <!-- Leaflet CSS untuk peta interaktif -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        /* Memastikan peta tetap berada di belakang sidebar pada tampilan mobile */
+        #map {
+            z-index: 1;
+        }
+    
+        /* Gaya sidebar untuk tampilan mobile */
+        #favoritesSidebar {
+            z-index: 20; /* Z-index lebih tinggi untuk memastikan berada di atas peta */
+        }
+    
+        /* Gaya overlay untuk mobile */
+        #overlay {
+            z-index: 10;
+        }
+    </style>
+    
+</head>
+
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col items-center">
+
+    <!-- Kontainer Utama -->
+    <div class="max-w-6xl w-full p-4 bg-white rounded-lg shadow-lg my-6 flex flex-col md:flex-row relative">
+
+        <!-- Bagian Kiri: Peta dan Tampilan Cuaca -->
+        <div class="flex-1">
+            <!-- Navbar dengan Hamburger Menu -->
+            <nav class="bg-white shadow-md rounded-lg p-4 flex items-center justify-between mb-8 w-full">
+                <span class="text-xl font-semibold text-blue-600">Weather Forecast</span>
+    
+                <!-- Pencarian Kota -->
+                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <input id="cityInput" type="text" placeholder="Search city..."
+                           class="p-2 border-none focus:outline-none w-full" />
+                    <button onclick="getWeatherFromInput()" class="px-4 py-2 bg-blue-600 text-white font-semibold">
+                        🔍
+                    </button>
+                </div>
+    
+                <!-- Ikon Hamburger (tampil di mobile) -->
+                <button id="hamburgerButton" class="md:hidden px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg ml-4">
+                    ☰
+                </button>
+            </nav>
+
+            <!-- Bagian Peta Interaktif Indonesia -->
+            <div class="mt-4">
+                <h2 class="text-lg font-semibold">Select a City from Map</h2>
+                <div id="map" class="w-full h-96 mt-4 rounded-lg shadow-lg"></div>
+            </div>
+
+            <!-- Bagian Tampilan Cuaca -->
+            <div id="weatherDisplay" class="bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-lg shadow-md hidden mt-8 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 id="cityName" class="text-2xl font-bold">City, Country</h2>
+                        <p id="currentTime" class="text-sm">Date & Time</p>
+                    </div>
+                    <div class="text-5xl font-bold" id="temperature">--°C</div>
+                </div>
+                <div class="flex items-center justify-between mb-4">
+                    <p id="description" class="text-lg font-semibold">Weather Description</p>
+                    <div id="weatherIcon">
+                        <img src="" alt="Weather Icon" class="h-16 w-16">
+                    </div>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <p>🌡 Feels like: <span id="feelsLike">--°C</span></p>
+                    <p>💧 Humidity: <span id="humidity">--%</span></p>
+                    <p>🌬 Wind: <span id="wind">-- km/h</span></p>
+                    <p>🌪 Pressure: <span id="pressure">-- hPa</span></p>
+                </div>
+            </div>
+
+            <!-- Pesan Error -->
+            <div id="errorMessage" class="text-center text-red-500 mt-4 hidden">City not found or data unavailable.</div>
+        </div>
+
+        <!-- Sidebar untuk Kota Favorit (desktop dan mobile) -->
+        <div id="favoritesSidebar" class="w-full md:w-1/3 md:ml-6 mt-8 md:mt-0 bg-white shadow-lg md:bg-transparent fixed md:relative inset-y-0 right-0 transform translate-x-full md:translate-x-0 transition-transform duration-300 md:transform-none z-10">
+            <div class="p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Favorite Cities</h2>
+                <div id="favoritesContainer" class="flex flex-col space-y-4">
+                    <!-- Kota favorit akan dimuat di sini secara dinamis sebagai kartu vertikal -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay untuk Sidebar Mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black opacity-50 hidden md:hidden"></div>
+
+    <!-- Leaflet JS untuk Peta -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- JavaScript untuk Aplikasi Cuaca -->
+    <script>
+        // Inisialisasi Peta Leaflet
+        const map = L.map('map').setView([-2.5, 118], 5); // Pusatkan pada Indonesia dengan tingkat zoom 5
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Daftar kota di Indonesia beserta koordinatnya
+        const cities = [
+            { name: 'Jakarta', coords: [-6.2088, 106.8456] },
+            { name: 'Surabaya', coords: [-7.2504, 112.7688] },
+            { name: 'Medan', coords: [3.5952, 98.6722] },
+            { name: 'Bandung', coords: [-6.9175, 107.6191] },
+            { name: 'Denpasar', coords: [-8.6705, 115.2126] },
+            { name: 'Makassar', coords: [-5.1477, 119.4327] },
+            { name: 'Palembang', coords: [-2.9909, 104.7567] },
+            { name: 'Pekanbaru', coords: [0.5333, 101.45] },
+            { name: 'Semarang', coords:[-6.9667, 110.4194]}
+        ];
+
+        // Menambahkan marker untuk setiap kota
+        cities.forEach(city => {
+            const marker = L.marker(city.coords).addTo(map).bindPopup(city.name);
+            marker.on('click', () => getWeather(city.name));
+        });
+
+        // Mengambil cuaca berdasarkan nama kota
+        async function getWeather(city) {
+            const weatherDisplay = document.getElementById('weatherDisplay');
+            const errorMessage = document.getElementById('errorMessage');
+
+            try {
+                const response = await fetch(`/weather?city=${city}`);
+                const data = await response.json();
+
+                // Mengupdate tampilan cuaca dengan data yang diterima
+                document.getElementById('cityName').textContent = `${data.city}, ${data.country}`;
+                document.getElementById('currentTime').textContent = new Date().toLocaleString();
+                document.getElementById('temperature').textContent = `${data.temperature}°C`;
+                document.getElementById('description').textContent = data.description;
+                document.getElementById('weatherIcon').querySelector('img').src = `http://openweathermap.org/img/w/${data.icon}.png`;
+                document.getElementById('feelsLike').textContent = `${data.feelsLike}°C`;
+                document.getElementById('humidity').textContent = `${data.humidity}%`;
+                document.getElementById('wind').textContent = `${data.windSpeed} km/h`;
+                document.getElementById('pressure').textContent = `${data.pressure} hPa`;
+
+                // Menampilkan tampilan cuaca dan menyembunyikan pesan error
+                weatherDisplay.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                weatherDisplay.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'City not found or data unavailable.';
+            }
+        }
+
+        // Mengambil cuaca dari input pencarian
+        function getWeatherFromInput() {
+            const city = document.getElementById('cityInput').value;
+            getWeather(city);
+        }
+
+        async function loadFavorites() {
+            const response = await fetch('/favorites');
+            const favoriteData = await response.json();
+            const favoritesContainer = document.getElementById('favoritesContainer');
+            favoritesContainer.innerHTML = '';
+
+            favoriteData.forEach(data => {
+                const card = document.createElement('div');
+                card.classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'p-4', 'rounded-lg', 'shadow-md', 'text-white', 'flex', 'flex-col', 'items-center', 'transform', 'transition', 'duration-300', 'hover:scale-105');
+
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold">${data.city}, ${data.country}</h3>
+                    <img src="http://openweathermap.org/img/w/${data.icon}.png" alt="Weather Icon" class="h-16 w-16 my-2">
+                    <p class="text-3xl font-semibold">${data.temperature}°C</p>
+                    <p class="text-gray-200">${data.description}</p>
+                `;
+
+                favoritesContainer.appendChild(card);
+            });
+        }
+
+        // Panggil loadFavorites saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', loadFavorites);
+
+        // Toggle Sidebar untuk Tampilan Mobile
+        const sidebar = document.getElementById('favoritesSidebar');
+        const overlay = document.getElementById('overlay');
+        const hamburgerButton = document.getElementById('hamburgerButton');
+
+        // Fungsi untuk membuka dan menutup sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        hamburgerButton.addEventListener('click', () => {
+            sidebar.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            // Periksa apakah klik berada di luar sidebar dan tombol hamburger
+            if (!sidebar.contains(e.target) && !hamburgerButton.contains(e.target)) {
+                sidebar.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        });
+
+        sidebar.addEventListener('click', (e) => {
+            e.stopPropagation(); // Cegah klik merambat ke dokumen
+        });
+
+    </script>
+
+</body>
+</html>
