@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-semibold text-center text-gray-800 mb-8">Weather Forecast for {{ weather.city }} - {{ weather.country }}</h1>
+        
+        <!-- Grafik Cuaca 5 Hari Ke Depan -->
+        <div class="chart-container mb-8">
+            <canvas id="weatherChart"></canvas>
+        </div>
+
+        <div class="text-4xl font-bold text-black-500 ">
+            Today :
+        </div>
+        
+        <!-- Tampilkan Perkiraan Cuaca 4 Jam Ke Depan -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+            {% for forecast in weather.forecast %}
+            <div class="card bg-white shadow-lg rounded-lg p-4">
+                <h5 class="text-xl font-semibold mb-2">{{ forecast.date }}</h5>
+                <div class="flex justify-between items-center mb-4">
+                    <img src="http://openweathermap.org/img/wn/{{ forecast.icon }}@2x.png" alt="Weather Icon" class="w-16 h-16">
+                    <p class="text-3xl font-semibold">{{ forecast.temperature }} °C</p>
+                </div>
+                <p class="text-sm text-gray-500">{{ forecast.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="/" class="bg-blue-500 text-white py-2 px-6 rounded-full hover:bg-blue-600 transition duration-300">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        const forecastData = {{ weather.forecast_5days | tojson }};
+        
+        const labels = forecastData.map(item => item.date);
+        const temperatures = forecastData.map(item => item.temperature);
+
+        const ctx = document.getElementById('weatherChart').getContext('2d');
+        const weatherChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: temperatures,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        },
+                        ticks: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
