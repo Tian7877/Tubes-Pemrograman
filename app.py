@@ -100,7 +100,7 @@ class WeatherApp:
             return None
 
 app = Flask(__name__)
-weather_app = WeatherApp(api_key='07b4a31aed282295051bedd62e9ebb99')
+weather_app = WeatherApp(api_key='')
 app.config.from_object(Config)
 db.init_app(app)
 
