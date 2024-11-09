@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css">
+
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            fetch(`/set_location?lat=${lat}&lon=${lon}`, {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById("location").innerText = ` ${data.city}, ${data.country}`;
+                    document.getElementById("temperature").innerText = `${data.temperature}°C`;
+                    document.getElementById("description").innerText = `Description: ${data.description}`;
+                    document.getElementById("humidity").innerText = `Humidity: ${data.humidity}%`;
+                    document.getElementById("windSpeed").innerText = `Wind Speed: ${data.windSpeed} m/s`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Could not retrieve weather data.');
+            });
+        }
+
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("An unknown error occurred.");
+                    break;
+            }
+        }
+
+        window.onload = function() {
+            getLocation();
+        }
+    </script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white shadow-lg rounded-lg p-6 max-w-md w-full">
+        <h1 class="text-2xl font-bold text-center mb-6">Welcome, {{ session['username'] }}!</h1>
+        <p class="text-gray-500 text-center mb-4">Your current weather information:</p>
+
+        <a href="/index"> Click For More :
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-md text-white flex flex-col items-left transform transition duration-300 hover:scale-105"><!-- Weather Data Display -->
+                <div id="location" class="text-xl font-bold"></div>
+                <div id="temperature" class="text-3xl font-semibold"></div>
+                <div id="description" class="text-gray-200" ></div>
+                <div id="humidity" class="text-gray-200"></div>
+                <div id="windSpeed" class="text-gray-200"></div>
+            </div>
+        </a>
+        <div class="mt-6 text-center">
+            <p>Please allow access to your location so we can show the weather.</p>
+        </div>
+    </div>
+</body>
+</html>
