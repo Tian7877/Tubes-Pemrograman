@@ -11,6 +11,33 @@ class WeatherApp:
         self.api_key = api_key
         self.favorite_cities = ["Jakarta", "Bali", "Bandung", "Medan"]
 
+    def get_forecast_data_by_coordinates(self, lat, lon):
+        url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={self.api_key}&units=metric"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            next_4_hours = []
+
+            # Ambil data perkiraan per jam untuk 4 jam berikutnya
+            for forecast in data['list']:
+                forecast_date = datetime.strptime(forecast['dt_txt'], "%Y-%m-%d %H:%M:%S")
+                
+                # Hanya data 4 jam ke depan yang diambil
+                if len(next_4_hours) < 4 and forecast_date > datetime.now():
+                    next_4_hours.append({
+                        "time": forecast['dt_txt'],
+                        "temperature": forecast['main']['temp'],
+                        "description": forecast['weather'][0]['description'],
+                        "icon": forecast['weather'][0]['icon'],
+                        "humidity": forecast['main']['humidity']
+                    })
+
+            return {
+                "forecast": next_4_hours
+            }
+        else:
+            return None
+        
     def get_weather_data(self, city):
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={self.api_key}&units=metric"
         response = requests.get(url)
@@ -119,11 +146,14 @@ def home():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    if 'username' in session:
+        return render_template('dashboard.html')
+    else:
+        return render_template('login.html')
 
 @app.route('/back')
 def back():
-    return render_template('back.html')
+        return render_template('back.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -197,9 +227,12 @@ def api_forecast(city_slug):
 
 @app.route('/forecast/<city_slug>')
 def forecast(city_slug):
-    weather_data = weather_app.get_forecast_data(city_slug)
-    if weather_data:
-        return render_template('forecast.html', weather=weather_data)
+    if 'username' in session:
+        weather_data = weather_app.get_forecast_data(city_slug)
+        if weather_data:
+            return render_template('forecast.html', weather=weather_data)
+    else:
+        return render_template('login.html')
     return render_template('404.html'), 404
 
 @app.route('/set_location', methods=['GET'])
@@ -207,11 +240,19 @@ def set_location():
     lat = request.args.get('lat')
     lon = request.args.get('lon')
     if lat and lon:
+        # Ambil data cuaca saat ini berdasarkan koordinat
         weather_data = weather_app.get_weather_by_coordinates(lat, lon)
-        if weather_data:
+        
+        # Ambil data perkiraan cuaca per jam untuk 4 jam ke depan
+        forecast_data = weather_app.get_forecast_data_by_coordinates(lat, lon)
+        if weather_data and forecast_data:
+            # Gabungkan cuaca saat ini dengan data perkiraan 4 jam ke depan
+            weather_data['forecast'] = forecast_data['forecast'][:4]  # Ambil 4 jam pertama
             return jsonify(weather_data)
+        
         return jsonify({"error": "Weather data not available"}), 404
     return jsonify({"error": "Invalid location data"}), 400
+
 
 if __name__ == '__main__':
     app.run(debug=True)
