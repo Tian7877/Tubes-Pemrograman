@@ -67,11 +67,11 @@ class WeatherApp:
             added_days = set()
             next_4_hours = []
 
-            # Process forecast data for next 4 hours and daily data for 5 days
+            
             for forecast in data['list']:
                 forecast_date = datetime.strptime(forecast['dt_txt'], "%Y-%m-%d %H:%M:%S")
                 
-                # Get data for next 4 hours
+                
                 if len(next_4_hours) < 4 and forecast_date > datetime.now():
                     next_4_hours.append({
                         "date": forecast['dt_txt'],
@@ -80,7 +80,7 @@ class WeatherApp:
                         "icon": forecast['weather'][0]['icon']
                     })
                 
-                # Get data for daily forecast (choose one point per day around noon)
+                
                 if forecast_date.date() not in added_days and forecast_date.hour == 12:
                     forecast_5days.append({
                         "date": forecast['dt_txt'],
