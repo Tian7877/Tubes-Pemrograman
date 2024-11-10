@@ -2,6 +2,9 @@
 
 Ini adalah aplikasi cuaca sederhana menggunakan Flask.
 
+## Struktur Proyek
+
+```plaintext
 weather-app/
 │
 ├── app.py                  # File utama Flask untuk menjalankan aplikasi
@@ -22,6 +25,7 @@ weather-app/
 ├── package.json            # Metadata proyek dan dependencies Node.js
 ├── package-lock.json       # Versi dependencies Node.js yang terkunci
 └── weather_data.db         # Database SQLite untuk menyimpan data cuaca lokal
+
 
 
 Cara Menjalankan : 
