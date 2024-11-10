@@ -7,23 +7,23 @@
         <!-- Tailwind CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css">
 
-    <!--Add Favicon-->
+    
     <link rel="icon" href="../image/imt.jpg" type="image/jpg" />
 
-    <!-- Leaflet CSS for interactive map -->
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        /* Ensure the map stays behind the sidebar on mobile */
+       
         #map {
             z-index: 1;
         }
     
-        /* Sidebar styles for mobile view */
+       
         #favoritesSidebar {
             z-index: 20; 
         }
     
-        /* Overlay style for mobile */
+        
         #overlay {
             z-index: 10;
         }
@@ -171,7 +171,7 @@
             { name: 'Manokwari', coords: [-0.8614, 134.0634] }
         ];
 
-        // Add markers for each provincial capital
+        
         cities.forEach(city => {
             const marker = L.marker(city.coords).addTo(map).bindPopup(city.name);
             marker.on('click', () => getWeather(city.name));
@@ -200,11 +200,11 @@
                 const cityInput = document.getElementById('cityInput');
                 const city = cityInput.value.trim(); // Remove extra spaces
 
-                // Clear previous error message
+                
                 const errorMessage = document.getElementById('errorMessage');
                 errorMessage.classList.add('hidden');
 
-                // Check if the input is empty
+                
                 if (!city) {
                     errorMessage.textContent = 'Fill Search Bar';
                     errorMessage.classList.remove('hidden');
@@ -214,7 +214,7 @@
                 try {
                     const response = await fetch(`/weather?city=${city}`);
                     
-                    // If the response is not OK (e.g., city not found)
+                    // If the response is not city (e.g., city not found)
                     if (!response.ok) {
                         throw new Error('City not found');
                     }
