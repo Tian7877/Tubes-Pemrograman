@@ -24,7 +24,7 @@ weather-app/
 ├── tailwind.config.js      # Konfigurasi Tailwind CSS
 ├── package.json            # Metadata proyek dan dependencies Node.js
 ├── package-lock.json       # Versi dependencies Node.js yang terkunci
-└── weather_data.db         # Database SQLite untuk menyimpan data cuaca lokal
+└── weather_data.db         # Database SQLite untuk menyimpan data user
 
 
 
