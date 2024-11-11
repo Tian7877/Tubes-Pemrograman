@@ -17,12 +17,9 @@ class WeatherApp:
         if response.status_code == 200:
             data = response.json()
             next_4_hours = []
-
-            # Ambil data perkiraan per jam untuk 4 jam berikutnya
             for forecast in data['list']:
                 forecast_date = datetime.strptime(forecast['dt_txt'], "%Y-%m-%d %H:%M:%S")
                 
-                # Hanya data 4 jam ke depan yang diambil
                 if len(next_4_hours) < 4 and forecast_date > datetime.now():
                     next_4_hours.append({
                         "time": forecast['dt_txt'],
@@ -94,11 +91,9 @@ class WeatherApp:
             added_days = set()
             next_4_hours = []
 
-            # Process forecast data for next 4 hours and daily data for 5 days
             for forecast in data['list']:
                 forecast_date = datetime.strptime(forecast['dt_txt'], "%Y-%m-%d %H:%M:%S")
                 
-                # Get data for next 4 hours
                 if len(next_4_hours) < 4 and forecast_date > datetime.now():
                     next_4_hours.append({
                         "date": forecast['dt_txt'],
@@ -107,7 +102,6 @@ class WeatherApp:
                         "icon": forecast['weather'][0]['icon']
                     })
                 
-                # Get data for daily forecast (choose one point per day around noon)
                 if forecast_date.date() not in added_days and forecast_date.hour == 12:
                     forecast_5days.append({
                         "date": forecast['dt_txt'],
@@ -120,8 +114,8 @@ class WeatherApp:
             return {
                 "city": data['city']['name'],
                 "country": data['city']['country'],
-                "forecast": next_4_hours,        # Per hour forecasts for 4-hour cards
-                "forecast_5days": forecast_5days[:5]  # Daily forecasts for 5-day chart
+                "forecast": next_4_hours,       
+                "forecast_5days": forecast_5days[:5] 
             }
         else:
             return None
@@ -131,18 +125,22 @@ weather_app = WeatherApp(api_key='07b4a31aed282295051bedd62e9ebb99')
 app.config.from_object(Config)
 db.init_app(app)
 
-# Tambahkan filter datetimeformat untuk format tanggal di Jinja
+
 def datetimeformat(value):
     date = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
     return date.strftime("%d-%m-%Y %H:%M")
 
-# Daftarkan filter ke lingkungan Jinja Flask
+
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 
 
 @app.route('/')
 def home():
     return redirect(url_for('login')) 
+
+@app.route('/logout')
+def logout():
+    return render_template('logout.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -164,7 +162,7 @@ def login():
         
         if user and check_password_hash(user.password, password):
             session['username'] = user.username
-            return redirect(url_for('dashboard'))  # Mengarah ke halaman index setelah login
+            return redirect(url_for('dashboard'))  
         else:
             return redirect(url_for('back'))
     
@@ -176,20 +174,20 @@ def register():
         username = request.form['username']
         password = request.form['password']
         
-        # Cek apakah username sudah ada di database
+        
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             return "Username already exists. Please choose another one."
 
-        # Hash password sebelum disimpan
+        
         hashed_password = generate_password_hash(password)
         new_user = User(username=username, password=hashed_password)
         
-        # Simpan ke database
+        
         db.session.add(new_user)
         db.session.commit()
         
-        return redirect(url_for('login'))  # Arahkan ke halaman login setelah registrasi
+        return redirect(url_for('login'))  
 
     return render_template('register.html')
 
@@ -197,7 +195,7 @@ def register():
 @app.route('/index')
 def index():
     if 'username' in session:
-        # Mengambil data cuaca favorit atau lokasi pengguna
+        
         favorite_weather = weather_app.get_favorite_weather()
         return render_template('index.html', weather=favorite_weather)
     else:
@@ -240,14 +238,13 @@ def set_location():
     lat = request.args.get('lat')
     lon = request.args.get('lon')
     if lat and lon:
-        # Ambil data cuaca saat ini berdasarkan koordinat
+        
         weather_data = weather_app.get_weather_by_coordinates(lat, lon)
         
-        # Ambil data perkiraan cuaca per jam untuk 4 jam ke depan
+        
         forecast_data = weather_app.get_forecast_data_by_coordinates(lat, lon)
         if weather_data and forecast_data:
-            # Gabungkan cuaca saat ini dengan data perkiraan 4 jam ke depan
-            weather_data['forecast'] = forecast_data['forecast'][:4]  # Ambil 4 jam pertama
+            weather_data['forecast'] = forecast_data['forecast'][:4]  
             return jsonify(weather_data)
         
         return jsonify({"error": "Weather data not available"}), 404

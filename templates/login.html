@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* Animasi geser */
+
         .slide-in-left {
             transform: translateX(-100%);
             transition: transform 0.5s ease-in-out;
@@ -32,7 +32,6 @@
 <body class="bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center min-h-screen">
 
     <div id="container" class="w-full max-w-4xl bg-white rounded-xl shadow-xl p-8 flex items-center space-x-8">
-        <!-- Form Section -->
         <div class="w-full max-w-md space-y-6">
             <h2 class="text-3xl font-bold text-center text-gray-800">Welcome Back!</h2>
             <p class="text-center text-gray-600">Sign in to your account</p>
@@ -61,7 +60,7 @@
             </p>
         </div>
 
-        <!-- Image Section -->
+
         <div class="hidden lg:block w-1/2">
             <div class="w-128 h-128 overflow-hidden rounded-full">
                 <img src="https://img2.pngdownload.id/20180518/vzr/kisspng-weather-forecasting-logo-weather-5afeb3a37c07a6.529006401526641571508.jpg"
@@ -72,14 +71,13 @@
     </div>
 
     <script>
-        // JavaScript untuk toggle password visibility
+
         const togglePassword = document.getElementById('toggle-password');
         const passwordField = document.getElementById('password');
         const eyeIcon = document.getElementById('eye-icon');
         
         togglePassword.addEventListener('click', () => {
-            // Toggle the type attribute
-            if (passwordField.type === 'password') {
+              if (passwordField.type === 'password') {
                 passwordField.type = 'text';
                 eyeIcon.classList.remove('fa-eye');
                 eyeIcon.classList.add('fa-eye-slash');
@@ -90,7 +88,7 @@
             }
         });
 
-        // JavaScript untuk animasi transisi
+
         const container = document.getElementById('container');
         const registerLink = document.getElementById('register-link');
         

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+
+        .slide-in-left {
+            transform: translateX(-100%);
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide-out-left {
+            transform: translateX(-100%);
+            transition: transform 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center min-h-screen">
+
+    <div id="container" class="w-full max-w-4xl bg-white rounded-xl shadow-xl p-8 flex items-center space-x-8 ">
+        <div class="w-full max-w-md text-center space-y-4">
+            <h2 class="text-3xl font-bold text-gray-800">Logout Success</h2>
+            <p class="text-gray-600">Your history is safe.</p>
+            <p class="text-gray-600">Please come back again.</p>
+            <button onclick="redirectToLogin()" class="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition duration-300">
+                Back to Login
+            </button>
+        </div>
+
+
+        <div class="hidden lg:block w-1/2">
+            <div class="w-128 h-128 overflow-hidden rounded-full">
+                <img src="https://img2.pngdownload.id/20180518/vzr/kisspng-weather-forecasting-logo-weather-5afeb3a37c07a6.529006401526641571508.jpg"
+                     alt="Logout Image" 
+                     class="w-full h-full object-cover">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function redirectToLogin() {
+            const container = document.getElementById('container');
+            container.classList.add('slide-out-left');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
+
