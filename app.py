@@ -5,7 +5,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import User
 from extensions import db
 from config import Config
+from flask_socketio import SocketIO, emit
+from threading import Thread
+import time
+import requests
 
+NOTIFICATION_INTERVAL = 10
 class WeatherApp:
     def __init__(self, api_key):
         self.api_key = api_key
@@ -119,12 +124,34 @@ class WeatherApp:
             }
         else:
             return None
+        
+class WeatherNotificationService:
+    def __init__(self, app, socketio, weather_app):
+        self.app = app
+        self.socketio = socketio
+        self.weather_app = weather_app
+
+    def send_weather_notifications(self):
+        city = "Jakarta"  
+        while True:
+            weather_data = self.weather_app.get_weather_data(city)
+            if weather_data:
+                self.socketio.emit('weather_notification', weather_data)  # Mengirim data cuaca melalui SocketIO
+            time.sleep(NOTIFICATION_INTERVAL)  # Tunggu sesuai interval
+
+    def start_notification_thread(self):
+        thread = Thread(target=self.send_weather_notifications)
+        thread.daemon = True
+        thread.start()
 
 app = Flask(__name__)
 weather_app = WeatherApp(api_key='')
 app.config.from_object(Config)
 db.init_app(app)
+socketio = SocketIO(app)
 
+weather_notification_service = WeatherNotificationService(app, socketio, weather_app)
+weather_notification_service.start_notification_thread()
 
 def datetimeformat(value):
     date = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
@@ -211,6 +238,19 @@ def get_weather():
         return jsonify({"error": "City not found"}), 404
     return jsonify({"error": "No city provided"}), 400
 
+@socketio.on('get_weather')
+def handle_get_weather(data):
+    city = data.get('city')
+    if city:
+        weather_data = weather_app.get_weather_data(city)
+        if weather_data:
+            emit('weather_response', weather_data)
+        else:
+            emit('weather_error', {'error': 'City not found'})
+    else:
+        emit('weather_error', {'error': 'No city provided'})
+
+
 @app.route('/favorites')
 def get_favorites():
     favorite_weather = weather_app.get_favorite_weather()
@@ -252,4 +292,5 @@ def set_location():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    
+    socketio.run(app, debug=True)
